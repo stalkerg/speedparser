@@ -126,12 +126,12 @@ def munge_author(author):
 
 def reverse_namespace_map(nsmap):
     d = fpnamespaces.copy()
-    d.update(dict([(v,k) for (k,v) in nsmap.iteritems()]))
+    d.update(dict([(v,k) for (k, v) in nsmap.items()]))
     return d
 
 def base_url(root):
     """Determine the base url for a root element."""
-    for attr,value in root.attrib.iteritems():
+    for attr, value in root.attrib.items():
         if attr.endswith('base') and 'http' in value:
             return value
     return None
@@ -142,7 +142,7 @@ def full_href(href, base=None):
 def full_href_attribs(attribs, base=None):
     if base is None: return dict(attribs)
     d = dict(attribs)
-    for key,value in d.iteritems():
+    for key,value in d.items():
         if key == 'href':
             d[key] = full_href(value, base)
     return d
@@ -479,7 +479,7 @@ class SpeedParserFeedRss20(object):
         if value:
             feed['generator'] = value
         else:
-            for value in node.attrib.itervalues():
+            for key, value in node.attrib.items():
                 if 'http://' in value:
                     feed['generator'] = value
 
@@ -599,7 +599,7 @@ class SpeedParser(object):
             result['encoding'] = self.encoding
 
 
-def parse(document, clean_html=True, unix_timestamp=False, encoding=None):
+def parse(document, clean_html=True, unix_timestamp=False, encoding=None, parser_class=SpeedParser):
     """Parse a document and return a feedparser dictionary with attr key access.
     If clean_html is False, the html in the feed will not be cleaned.  If
     clean_html is True, a sane version of lxml.html.clean.Cleaner will be used.
@@ -616,7 +616,7 @@ def parse(document, clean_html=True, unix_timestamp=False, encoding=None):
     result['entries'] = []
     result['bozo'] = 0
     try:
-        parser = SpeedParser(document, cleaner, unix_timestamp, encoding)
+        parser = parser_class(document, cleaner, unix_timestamp, encoding)
         parser.update(result)
     except Exception as e:
         if isinstance(e, UnicodeDecodeError) and encoding is True:
