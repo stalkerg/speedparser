@@ -15,10 +15,12 @@ LIMITATIONS:
 """
 
 import re
-import os
-import sys
 import time
-import urlparse
+try:
+    import urlparse
+except:
+    from urllib.parse import urlparse
+
 import chardet
 from lxml import etree, html
 from lxml.html import clean
@@ -78,7 +80,7 @@ def strip_outer_tag(text):
     """Strips the outer tag, if text starts with a tag.  Not entity aware;
     designed to quickly strip outer tags from lxml cleaner output.  Only
     checks for <p> and <div> outer tags."""
-    if not text or not isinstance(text, basestring):
+    if not text or not isinstance(text, str):
         return text
     stripped = text.strip()
     if (stripped.startswith('<p>') or stripped.startswith('<div>')) and \
@@ -103,7 +105,7 @@ def munge_author(author):
     the format: "name (email)"."""
     # this loveliness is from feedparser but was not usable as a function
     if '@' in author:
-        emailmatch = re.search(ur'''(([a-zA-Z0-9\_\-\.\+]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?))(\?subject=\S+)?''', author)
+        emailmatch = re.search(r'''(([a-zA-Z0-9\_\-\.\+]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?))(\?subject=\S+)?''', author)
         if emailmatch:
             email = emailmatch.group(0)
             # probably a better way to do the following, but it passes all the tests
@@ -212,7 +214,7 @@ class SpeedParserEntriesRss20(object):
         self.entries = entries
 
     def clean(self, text):
-        if text and isinstance(text, basestring):
+        if text and isinstance(text, str):
             return self.cleaner.clean_html(text)
         return text
 
@@ -439,10 +441,10 @@ class SpeedParserFeedRss20(object):
         self.feed = feed
 
     def clean(self, text, outer_tag=True):
-        if text and isinstance(text, basestring):
+        if text and isinstance(text, str):
             if not outer_tag:
                 txt = self.cleaner.clean_html(text)
-                frag = lxml.html.fragment_fromstring(txt)
+                frag = lxml.html.fragment_fromstring(txt) #Strange line
             return self.cleaner.clean_html(text)
         return text
 
@@ -616,7 +618,7 @@ def parse(document, clean_html=True, unix_timestamp=False, encoding=None):
     try:
         parser = SpeedParser(document, cleaner, unix_timestamp, encoding)
         parser.update(result)
-    except Exception, e:
+    except Exception as e:
         if isinstance(e, UnicodeDecodeError) and encoding is True:
             encoding = chardet.detect(document)['encoding']
             document = document.decode(encoding, 'replace').encode('utf-8')
@@ -630,7 +632,7 @@ def parse(document, clean_html=True, unix_timestamp=False, encoding=None):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) != 2:
-        print "Must provide filename of feed."
+        print("Must provide filename of feed.")
     filename = sys.argv[1]
     feed = open(filename).read()
     if '-- END TRACEBACK --' in feed:
