@@ -18,8 +18,10 @@ import re
 import time
 try:
     import urlparse
+    from urlparse import urljoin
 except:
     from urllib.parse import urlparse
+    from urllib.parse import urljoin 
 
 import chardet
 from lxml import etree, html
@@ -28,7 +30,7 @@ from lxml.html import clean
 try:
     import feedparser
 except:
-    import feedparsercompat as feedparser
+    import speedparser.feedparsercompat as feedparser
 
 keymap = feedparser.FeedParserDict.keymap
 fpnamespaces = feedparser._FeedParserMixin.namespaces
@@ -88,16 +90,16 @@ def strip_outer_tag(text):
         return stripped[stripped.index('>')+1:stripped.rindex('<')]
     return text
 
-nsre = re.compile(r'xmlns\s*=\s*[\'"](.+?)[\'"]')
+nsre = re.compile(rb'xmlns\s*=\s*[\'"](.+?)[\'"]')
 def strip_namespace(document):
-    if document[:1000].count('xmlns') > 5:
-        if 'xmlns' not in document[:1000]:
+    if document[:1000].count(b'xmlns') > 5:
+        if b'xmlns' not in document[:1000]:
             return None, document
-    elif 'xmlns' not in document[:400]:
+    elif b'xmlns' not in document[:400]:
         return None, document
     match = nsre.search(document)
     if match:
-        return match.groups()[0], nsre.sub('', document)
+        return match.groups()[0].decode("ascii"), nsre.sub(b'', document)
     return None, document
 
 def munge_author(author):
@@ -137,7 +139,7 @@ def base_url(root):
     return None
 
 def full_href(href, base=None):
-    return urlparse.urljoin(base, href)
+    return urljoin(base, href)
 
 def full_href_attribs(attribs, base=None):
     if base is None: return dict(attribs)
@@ -165,7 +167,7 @@ def innertext(node):
     is just node.text.  Otherwise, it's node.text + sub-element-text +
     node.tail."""
     if not len(node): return node.text
-    return (node.text or '') + ''.join([etree.tostring(c) for c in node]) + (node.tail or '')
+    return (node.text or '') + ''.join([etree.tostring(c, encoding="unicode") for c in node]) + (node.tail or '')
 
 class SpeedParserEntriesRss20(object):
     entry_xpath = '/rss/item | /rss/channel/item'
@@ -509,6 +511,8 @@ class SpeedParser(object):
             self.xmlns = self.xmlns.strip('#')
         parser = etree.XMLParser(recover=True)
         tree = etree.fromstring(content, parser=parser)
+        if tree is None:
+            raise IncompatibleFeedError("Tree is none")
         if isinstance(tree, etree._ElementTree):
             self.tree = tree
             self.root = tree.getroot()
@@ -573,7 +577,7 @@ class SpeedParser(object):
             return SpeedParserFeedRdf(self.root, **kwargs).feed_dict()
         if version in ('atom10', 'atom03'):
             return SpeedParserFeedAtom(self.root, **kwargs).feed_dict()
-        raise IncompatibleFeedError("Feed not compatible with speedparser.")
+        raise IncompatibleFeedError("Feed not compatible with speedparser. %s %s"%(version, self.xmlns))
 
     def parse_entries(self, version, encoding):
         kwargs = dict(encoding=encoding, namespaces=self.namespaces,
@@ -615,18 +619,19 @@ def parse(document, clean_html=True, unix_timestamp=False, encoding=None, parser
     result['feed'] = feedparser.FeedParserDict()
     result['entries'] = []
     result['bozo'] = 0
-    try:
-        parser = parser_class(document, cleaner, unix_timestamp, encoding)
-        parser.update(result)
-    except Exception as e:
-        if isinstance(e, UnicodeDecodeError) and encoding is True:
-            encoding = chardet.detect(document)['encoding']
-            document = document.decode(encoding, 'replace').encode('utf-8')
-            return parse(document, clean_html, unix_timestamp, encoding)
-        import traceback
-        result['bozo'] = 1
-        result['bozo_exception'] = e
-        result['bozo_tb'] = traceback.format_exc()
+    #try:
+    parser = parser_class(document, cleaner, unix_timestamp, encoding)
+    parser.update(result)
+    #except Exception as e:
+    #    print("Exception %s"%e)
+    #    if isinstance(e, UnicodeDecodeError) and encoding is True:
+    #        encoding = chardet.detect(document)['encoding']
+    #        document = document.decode(encoding, 'replace').encode('utf-8')
+    #        return parse(document, clean_html, unix_timestamp, encoding)
+    #    import traceback
+    #    result['bozo'] = 1
+    #    result['bozo_exception'] = e
+    #    result['bozo_tb'] = traceback.format_exc()
     return result
 
 if __name__ == '__main__':
