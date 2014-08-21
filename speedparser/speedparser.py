@@ -495,18 +495,21 @@ class SpeedParserFeedRss20(object):
     def parse_kula_pagination(self, node, feed, ns='kula'):
         for child in node:
             if child.tag.endswith('next'):
-                feed['kula_pagination_next'] = unicoder(node.text)
+                feed['kula_pagination_next'] = unicoder(child.text)
             elif child.tag.endswith('prev'):
-                feed['kula_pagination_prev'] = unicoder(node.text)
+                feed['kula_pagination_prev'] = unicoder(child.text)
 
     def feed_dict(self):
         return self.feed
 
+
 class SpeedParserFeedAtom(SpeedParserFeedRss20):
     channel_xpath = '/feed'
 
+
 class SpeedParserFeedRdf(SpeedParserFeedRss20):
     channel_xpath = '/rdf:RDF/channel'
+
 
 class SpeedParser(object):
 
