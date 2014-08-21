@@ -365,8 +365,10 @@ class SpeedParserEntriesRss20(object):
     def entry_list(self):
         return self.entries
 
+
 class SpeedParserEntriesRdf(SpeedParserEntriesRss20):
     entry_xpath = '/rdf:RDF/item | /rdf:RDF/channel/item'
+
 
 class SpeedParserEntriesAtom(SpeedParserEntriesRss20):
     entry_xpath = '/feed/entry'
@@ -377,23 +379,25 @@ class SpeedParserEntriesAtom(SpeedParserEntriesRss20):
         else:
             super(SpeedParserEntriesAtom, self).parse_summary(node, entry, ns)
 
+
 class SpeedParserFeedRss20(object):
     channel_xpath = '/rss/channel'
     tag_map = {
-        'title' : 'title',
-        'description' : 'subtitle',
-        'tagline' : 'subtitle',
-        'subtitle' : 'subtitle',
-        'link' : 'links',
+        'title': 'title',
+        'description': 'subtitle',
+        'tagline': 'subtitle',
+        'subtitle': 'subtitle',
+        'link': 'links',
         'pubDate': 'date',
-        'updated' : 'date',
-        'modified' : 'date',
+        'updated': 'date',
+        'modified': 'date',
         'date': 'date',
-        'generator' : 'generator',
+        'generator': 'generator',
         'generatorAgent': 'generator',
-        'language' : 'lang',
+        'language': 'lang',
         'id': 'id',
-        'lastBuildDate' : 'date',
+        'lastBuildDate': 'date',
+        'kula:pagination': 'kula_pagination'
     }
 
     def __init__(self, root, namespaces={}, encoding='utf-8', type='rss20', cleaner=default_cleaner,
@@ -487,6 +491,13 @@ class SpeedParserFeedRss20(object):
 
     def parse_id(self, node, feed, ns=''):
         feed['id'] = unicoder(node.text)
+
+    def parse_kula_pagination(self, node, feed, ns='kula'):
+        for child in node:
+            if child.tag.endswith('next'):
+                feed['kula_pagination_next'] = unicoder(node.text)
+            elif child.tag.endswith('prev'):
+                feed['kula_pagination_prev'] = unicoder(node.text)
 
     def feed_dict(self):
         return self.feed

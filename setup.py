@@ -4,13 +4,14 @@
 """Setup script for speedparser."""
 
 from setuptools import setup, find_packages
-import sys, os
+import sys
+import os
 
 try:
     from speedparser import VERSION
     version = ".".join(map(str, VERSION))
 except:
-    version = '0.1.9'
+    version = '0.2.0'
 
 # some trove classifiers:
 
