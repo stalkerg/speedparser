@@ -397,7 +397,8 @@ class SpeedParserFeedRss20(object):
         'language': 'lang',
         'id': 'id',
         'lastBuildDate': 'date',
-        'kula:pagination': 'kula_pagination'
+        'kula:pagination': 'kula_pagination',
+        'pagination': 'kula_pagination'
     }
 
     def __init__(self, root, namespaces={}, encoding='utf-8', type='rss20', cleaner=default_cleaner,
